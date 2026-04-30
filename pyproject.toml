@@ -1,0 +1,18 @@
+[project]
+name = "embertech-userapp"
+version = "1.1.0"
+dependencies = [
+  "Flask",
+    "Jinja2",
+    "MarkupSafe",
+    "Werkzeug"
+]
+requires-python = ">=3.9"
+authors = [
+    {name = "Joshua Gonzalez", email = ""},
+    {name = "Megan Tseng", email = ""},
+    {name = "Preston Kearnan", email = ""},
+    {name = "Gavin Ruane", email = "gjruane@calpoly.edu"}
+]
+description = "Web application for fabrication table owned by Wo"
+readme = "README.md"
