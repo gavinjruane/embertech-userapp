@@ -1,4 +1,4 @@
-CREATE TABLE User(
+CREATE TABLE Users(
     name VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
     password VARCHAR(255),
@@ -8,7 +8,7 @@ CREATE TABLE User(
     PRIMARY KEY (username)
 );
 
-CREATE TABLE Role(
+CREATE TABLE Roles(
     id INTEGER,
     title VARCHAR(64),
 
