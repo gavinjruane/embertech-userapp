@@ -61,6 +61,6 @@ I believe `sqlite3` should be installed on the Raspberry Pi already since it com
    `sqlite3 new-database.db < schema.sql`
 3. (Optional) Load the sample data into the database.
 
-    `sqlite3 new-database.db < sample-data.sql`l
+    `sqlite3 new-database.db < sample-data.sql`
 
 I also made a file called `useful-queries.sql` that might be helpful when we write our queries in Python.
