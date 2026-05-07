@@ -46,3 +46,21 @@ The repository is organized like a
 | \_\_init\_\_.py  | File to make pip and the Python interpreter happy                                |
 | pyproject.toml   | Configuration file for project                                                   |
 | requirements.txt | File with information about modules required for the project                     |
+
+## Database
+
+I think it makes the most sense to use `sqlite` for this project, especially since our database is going to be very simple.
+
+### Creating a database
+
+I believe `sqlite3` should be installed on the Raspberry Pi already since it comes with many Linux distributions; however, it is easily installable if not.
+
+1. Navigate to the directory containing the SQL files.
+2. Create the database using the schema file.
+
+   `sqlite3 new-database.db < schema.sql`
+3. (Optional) Load the sample data into the database.
+
+    `sqlite3 new-database.db < sample-data.sql`l
+
+I also made a file called `useful-queries.sql` that might be helpful when we write our queries in Python.
