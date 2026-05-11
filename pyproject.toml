@@ -5,7 +5,8 @@ dependencies = [
   "Flask",
     "Jinja2",
     "MarkupSafe",
-    "Werkzeug"
+    "Werkzeug",
+    "bcrypt"
 ]
 requires-python = ">=3.9"
 authors = [
