@@ -32,6 +32,23 @@ User-facing application for Embertech Automation fabrication table
     `flask --app main run`
 4. Navigate to http://127.0.0.1:5000 in your web browser.
 
+### Creating an .env file
+
+Our .env (environment) file will store sensitive variables like our secret key and any API keys.
+Because this file contains sensitive data, we cannot check it into git, so you will probably get some kind of
+`FileNotFoundException` if you don't create your own first.
+Thankfully, it is very simple to create.
+
+1. In the "flaskr" directory, create a file called ".env".
+
+   `touch .env`
+2. Generate a secret key.
+
+   `python -c 'import secrets; print(secrets.token_hex())'`
+3. In the ".env" file, write the following key-value pair.
+
+   `SECRET_KEY=<your secret key>`
+
 ## Project structure
 
 The repository is organized like a 
