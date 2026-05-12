@@ -9,7 +9,7 @@ config = dotenv_values("./flaskr/.env")
 app = Flask(__name__)
 app.secret_key = config["SECRET_KEY"]
 
-# Login Manager
+# Flask Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 
