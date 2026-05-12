@@ -36,6 +36,8 @@ def _db_close(exc):
     if not db_handle.is_closed():
         db_handle.close()
 
+# User Loader
+
 @login_manager.user_loader
 def load_user(user_id: str) -> User | None:
     try:
