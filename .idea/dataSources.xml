@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="sample" uuid="aff0c8e2-5298-412e-a8c1-12f04f6585d8">
+    <data-source source="LOCAL" name="database" uuid="8f45bbc3-a2ea-4209-8112-dc0ce31fabc0">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/flaskr/static/database/sample.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/flaskr/database.sqlite3</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
