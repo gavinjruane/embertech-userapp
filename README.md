@@ -37,7 +37,7 @@ User-facing application for Embertech Automation fabrication table
 Our .env (environment) file will store sensitive variables like our secret key and any API keys.
 Because this file contains sensitive data, we cannot check it into git, so you will probably get some kind of
 `FileNotFoundException` if you don't create your own first.
-Thankfully, it is very simple to create.
+Thankfully, it is very simple to create, and there is a file called ".env.example" on which you can model it!
 
 1. In the "flaskr" directory, create a file called ".env".
 
@@ -45,9 +45,13 @@ Thankfully, it is very simple to create.
 2. Generate a secret key.
 
    `python -c 'import secrets; print(secrets.token_hex())'`
-3. In the ".env" file, write the following key-value pair.
+3. Take note of the path to the database. (For me (Gavin), it's `/home/gavinruane/.../flaskr/database.sqlite3`)
+4. In the ".env" file, write the following key-value pairs.
 
-   `SECRET_KEY=<your secret key>`
+   ```dotenv
+   SECRET_KEY='<your secret key>'
+   DATABASE_PATH='<your database path>'
+   ```
 
 ## Project structure
 
