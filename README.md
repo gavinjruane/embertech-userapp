@@ -21,7 +21,7 @@ User-facing application for Embertech Automation fabrication table
     On *Windows*: `.venv\Scripts\activate`
 5. Install the required dependencies to run the project.
 
-    `pip freeze > requirements.txt`
+    `pip install -r requirements.txt`
 
 ### Running the development server
 

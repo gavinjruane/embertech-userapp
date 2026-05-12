@@ -1,3 +1,4 @@
+from flask_login import UserMixin
 from peewee import *
 
 db_handle = SqliteDatabase(None)
@@ -12,7 +13,7 @@ class Role(BaseModel):
     title = TextField()
 
 
-class User(BaseModel):
+class User(UserMixin, BaseModel):
     name = TextField()
     username = TextField(unique=True, primary_key=True)
     password = TextField()
