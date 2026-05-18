@@ -30,13 +30,16 @@ def hash_password(password: str) -> bytes:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
 
-def check_password(credential: LoginCredential) -> bool:
+def check_password(credential: LoginCredential) -> tuple[bool, User | None]:
     try:
         candidate: User = User.get(User.username == credential.username)
     except DoesNotExist:
-        return False
+        return False, None
 
-    return bcrypt.checkpw(credential.password.encode("utf-8"), candidate.password.encode("utf-8"))
+    if bcrypt.checkpw(credential.password.encode("utf-8"), candidate.password.encode("utf-8")):
+        return True, candidate
+    else:
+        return False, None
 
 
 def create_user(credential: SignupCredential) -> bool:

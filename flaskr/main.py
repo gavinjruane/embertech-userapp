@@ -53,9 +53,7 @@ def load_user(user_id: str) -> User | None:
 
 @app.route('/')
 def hello_world():
-    preston = db.User.get(db.User.name == "Preston Kearnan")
-
-    return f'<h1>Hello World! Embertech Automation with {preston.name}</h1>'
+    return f'<h1>Hello World! Embertech Automation</h1>'
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -67,7 +65,9 @@ def login():
         return render_template("login.html", form=login_form)
     elif request.method == "POST" and login_form.validate_on_submit():
         login_form.populate_obj(credential)
-        if check_password(credential):
+        status, user = check_password(credential)
+        if status:
+            login_user(user)
             return f'<h1>Success!</h1>'
         else:
             return f'<h1>NOT a success!</h1>'
