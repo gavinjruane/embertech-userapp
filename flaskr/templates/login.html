@@ -1,19 +1,163 @@
 <!DOCTYPE html>
-{% extends 'base.html' %}
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — EmberTech CNC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}" />
 </head>
-<body>
-{% block content %}
-    <h1>Log In</h1>
-    <form name="login" method="post" action="/login">
-        {{ form.csrf_token }}
-        <div>{{ form.username.label }}: {{ form.username() }}</div>
-        <div>{{ form.password.label }}: {{ form.password() }}</div>
-        <div>{{ form.submit() }}</div>
-    </form>
-{% endblock content %}
+<body class="login-body">
+
+  <div class="login-wrap">
+
+    <!-- Left panel: branding -->
+    <div class="login-brand">
+      <div class="login-brand-inner">
+        <div class="login-hex">⬡</div>
+        <h1 class="login-title">EMBER<strong>TECH</strong></h1>
+        <p class="login-subtitle">CNC CONTROL SYSTEM</p>
+        <div class="login-divider"></div>
+        <ul class="login-features">
+          <li>Real-time position monitoring</li>
+          <li>G-code workflow control</li>
+          <li>Material &amp; Z-axis setup</li>
+          <li>Multi-operator access control</li>
+        </ul>
+        <div class="login-version">v2.1.0 — PRODUCTION BUILD</div>
+      </div>
+    </div>
+
+    <!-- Right panel: form -->
+    <div class="login-panel">
+      <div class="login-form-wrap">
+        <div class="login-form-header">
+          <h2 class="login-form-title">OPERATOR LOGIN</h2>
+          <p class="login-form-sub">Authentication required to access machine controls.</p>
+        </div>
+
+        <!-- Error display -->
+        <div class="login-error hidden" id="login-error" role="alert">
+          <span class="login-error-icon">⚠</span>
+          <span id="login-error-msg">Invalid credentials. Please try again.</span>
+        </div>
+
+        <!-- Jinja flash messages fallback -->
+        <!-- {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="login-error login-error--{{ category }}">
+                <span class="login-error-icon">⚠</span>
+                <span>{{ message }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %} -->
+
+        <div class="login-form" id="login-form">
+          <div class="form-field">
+            <label class="form-label" for="username">USERNAME</label>
+            <input
+              class="form-input"
+              type="text"
+              id="username"
+              name="username"
+              autocomplete="username"
+              placeholder="operator_01"
+              required
+              autofocus
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="password">PASSWORD</label>
+            <input
+              class="form-input"
+              type="password"
+              id="password"
+              name="password"
+              autocomplete="current-password"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <button
+            class="btn btn--primary btn--full btn--lg"
+            type="button"
+            id="login-btn"
+            onclick="handleLogin()"
+          >
+            <span class="btn-text">AUTHENTICATE</span>
+            <span class="btn-spinner hidden" id="login-spinner">◌</span>
+          </button>
+        </div>
+
+        <p class="login-help">
+          Contact your system administrator if you cannot log in.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/actions.js') }}"></script>
+  <script>
+    function handleLogin() {
+      const btn       = document.getElementById('login-btn');
+      const spinner   = document.getElementById('login-spinner');
+      const btnText   = btn.querySelector('.btn-text');
+      const errorBox  = document.getElementById('login-error');
+      const errorMsg  = document.getElementById('login-error-msg');
+      const username  = document.getElementById('username').value.trim();
+      const password  = document.getElementById('password').value;
+
+      if (!username || !password) {
+        errorMsg.textContent = 'Please enter your username and password.';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+
+      // Set loading state
+      btn.disabled = true;
+      btnText.textContent = 'AUTHENTICATING…';
+      spinner.classList.remove('hidden');
+      errorBox.classList.add('hidden');
+
+      fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+        .then(res => res.json())
+        
+        .then(data => {
+          console.log(data);
+          if (data.success) {
+            btnText.textContent = 'ACCESS GRANTED ✓';
+            setTimeout(() => {
+              window.location.href = data.redirect || '/machine-state';
+            }, 600);
+          } else {
+            throw new Error(data.message || 'Invalid credentials.');
+          }
+        })
+
+        .catch(err => {
+          console.log("Error occurred!");
+          errorMsg.textContent = err.message;
+          errorBox.classList.remove('hidden');
+          btn.disabled = false;
+          btnText.textContent = 'AUTHENTICATE';
+          spinner.classList.add('hidden');
+        });
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  </script>
 </body>
 </html>

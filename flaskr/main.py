@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, login_user, login_required
 from dotenv import dotenv_values
 from peewee import DoesNotExist
 
@@ -9,7 +9,7 @@ from flaskr.db import db_handle, User
 from flaskr.forms import LoginForm, SignupForm
 
 # .env File
-config = dotenv_values("./flaskr/.env")
+config = dotenv_values(".env")
 
 # Flask App Configuration
 app = Flask(__name__)
@@ -58,21 +58,51 @@ def hello_world():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    login_form = LoginForm()
-    credential = LoginCredential("", "")
+    # login_form = LoginForm()
+    # credential = LoginCredential("", "")
 
+    # if request.method == "GET":
+    #     return render_template("login.html", form=login_form)
+    # elif request.method == "POST" and login_form.validate_on_submit():
+    #     login_form.populate_obj(credential)
+    #     status, user = check_password(credential)
+    #     if status:
+    #         login_user(user)
+    #         return f'<h1>Success!</h1>'
+    #     else:
+    #         return f'<h1>NOT a success!</h1>'
+    # else:
+    #     return f'<h1>Unknown method</h1>'
     if request.method == "GET":
-        return render_template("login.html", form=login_form)
-    elif request.method == "POST" and login_form.validate_on_submit():
-        login_form.populate_obj(credential)
+        return render_template("login.html")
+    elif request.method == "POST":
+        json: dict = request.get_json()
+        print(json)
+        credential = LoginCredential(json["username"], json["password"])
         status, user = check_password(credential)
+        print("user is:", user, type(user))
         if status:
-            login_user(user)
-            return f'<h1>Success!</h1>'
+            if login_user(user):
+                print("Success!")
+                return { "info": "test-info" , 
+                         "success": True,
+                         "redirect": "/setup",
+                         "message": "Error Logging In!"
+                         }
+            else:
+                print("Failed to login!")
+                return { "info": "test-info" , 
+                         "success": False,
+                         "redirect": "/setup",
+                         "message": "Error Logging In!"
+                         }
         else:
-            return f'<h1>NOT a success!</h1>'
-    else:
-        return f'<h1>Unknown method</h1>'
+            print("Fail!")
+            return { "info": "test-info" , 
+                         "success": False,
+                         "redirect": "/setup",
+                         "message": "Error Logging In!"
+                         }
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -92,3 +122,20 @@ def signup():
             return f'<h1>Did not create user!</h1>'
     else:
         return f'<h1>Unknown method</h1>'
+
+
+@app.route('/setup', methods=['GET', 'POST'])
+@login_required
+def setup():
+    if request.method == 'GET':
+        return render_template("setup.html")
+
+        
+@app.route('/machine_state', methods=['GET', 'POST'])
+def machine_state():
+    if request.method == 'GET':
+        return render_template("machine_state.html")
+        
+
+
+    

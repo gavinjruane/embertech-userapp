@@ -18,3 +18,6 @@ class User(UserMixin, BaseModel):
     username = TextField(unique=True, primary_key=True)
     password = TextField()
     role = ForeignKeyField(Role)
+
+    def get_id(self) -> str:
+        return self.username

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Machine State — EmberTech CNC{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="page-title-icon">◈</span>
+    MACHINE STATE
+  </h1>
+  <div class="page-meta" id="last-updated">Last updated: --</div>
+</div>
+
+<div class="dashboard-grid">
+
+  <!-- ══════════════════ POSITION READOUT ══════════════════ -->
+  <section class="card card--dark panel-position" aria-label="Position Readout">
+    <div class="card-header">
+      <span class="card-title">POSITION READOUT</span>
+      <span class="card-badge">mm</span>
+    </div>
+    <div class="position-grid">
+      <div class="axis-display">
+        <span class="axis-label axis-label--x">X</span>
+        <span class="axis-value" id="pos-x">0.000</span>
+      </div>
+      <div class="axis-display">
+        <span class="axis-label axis-label--y">Y</span>
+        <span class="axis-value" id="pos-y">0.000</span>
+      </div>
+      <div class="axis-display">
+        <span class="axis-label axis-label--z">Z</span>
+        <span class="axis-value" id="pos-z">0.000</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ MACHINE STATE ═════════════════════ -->
+  <section class="card panel-state" aria-label="Machine State">
+    <div class="card-header">
+      <span class="card-title">MACHINE STATE</span>
+    </div>
+    <div class="state-display" id="state-display">
+      <div class="state-indicator" id="state-indicator">
+        <span class="state-dot" id="state-dot"></span>
+        <span class="state-text" id="state-text">CONNECTING</span>
+      </div>
+      <div class="state-states">
+        {% for s in ['READY', 'RUNNING', 'PAUSED', 'STOPPED', 'DONE'] %}
+          <div class="state-chip" id="chip-{{ s | lower }}">{{ s }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ ALARMS ═════════════════════════════ -->
+  <section class="card card--alarm panel-alarms" aria-label="Alarms" id="alarms-panel">
+    <div class="card-header">
+      <span class="card-title">⚠ ALARMS</span>
+      <span class="alarm-count" id="alarm-count">0</span>
+    </div>
+    <div class="alarm-list" id="alarm-list">
+      <div class="alarm-empty" id="alarm-empty">
+        <span class="alarm-empty-icon">✓</span>
+        No active alarms
+      </div>
+      <!-- Alarm items injected by status.js -->
+    </div>
+  </section>
+
+  <!-- ══════════════════ CURRENT FILE ═══════════════════════ -->
+  <section class="card panel-job" aria-label="Current File">
+    <div class="card-header">
+      <span class="card-title">CURRENT FILE</span>
+    </div>
+    <div class="job-info">
+      <div class="job-file">
+        <span class="job-file-label">FILE</span>
+        <span class="job-file-path mono" id="current-file">— no file loaded —</span>
+      </div>
+      <div class="job-progress-row">
+        <span class="job-file-label">PROGRESS</span>
+        <div class="job-progress-bar">
+          <div class="job-progress-fill" id="job-progress-fill" style="width: 0%"></div>
+        </div>
+        <span class="job-progress-pct" id="job-progress-pct">0%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ OPERATOR CONTROLS ═════════════════ -->
+  <section class="card panel-controls" aria-label="Operator Controls">
+    <div class="card-header">
+      <span class="card-title">OPERATOR CONTROLS</span>
+    </div>
+
+    <div class="controls-primary">
+      <button
+        class="btn btn--start btn--xl"
+        id="btn-start"
+        onclick="machineAction('start')"
+        aria-label="Start program"
+      >
+        <span class="btn-icon">▶</span>
+        <span class="btn-label">START<br><small>PROGRAM</small></span>
+      </button>
+
+      <button
+        class="btn btn--pause btn--xl"
+        id="btn-pause"
+        onclick="machineAction('pause')"
+        aria-label="Pause program"
+      >
+        <span class="btn-icon">⏸</span>
+        <span class="btn-label">PAUSE</span>
+      </button>
+
+      <button
+        class="btn btn--stop btn--xl"
+        id="btn-stop"
+        onclick="machineAction('stop')"
+        aria-label="Emergency stop"
+      >
+        <span class="btn-icon">■</span>
+        <span class="btn-label">STOP<br><small>E-STOP</small></span>
+      </button>
+    </div>
+
+    <div class="controls-secondary">
+      <a href="{{ url_for('setup') }}" class="btn btn--secondary btn--lg">
+        <span>⬡</span> LOAD NEW FILE
+      </a>
+    </div>
+
+    <!-- Action feedback bar -->
+    <div class="action-feedback hidden" id="action-feedback">
+      <span class="action-spinner">◌</span>
+      <span id="action-feedback-msg">Sending command…</span>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Page-level initialisation — start polling immediately
+  document.addEventListener('DOMContentLoaded', () => {
+    StatusPoller.start();
+  });
+</script>
+{% endblock %}

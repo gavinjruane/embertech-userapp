@@ -1,16 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-{% block html %}
 <head>
-    {% block head %}
-    <meta charset="UTF-8">
-    <title>Title</title>
-    {% endblock head %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}EmberTech CNC{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}" />
 </head>
-{% endblock html %}
 <body>
-{% block content %}
 
-{% endblock content %}
+  <!-- ═══════════════════════════════════════ HEADER ══ -->
+  <header class="site-header">
+    <div class="header-brand">
+      <span class="brand-icon">⬡</span>
+      <div class="brand-text">
+        <span class="brand-name">EMBER<strong>TECH</strong></span>
+        <span class="brand-sub">CNC CONTROL SYSTEM v2.1</span>
+      </div>
+    </div>
+
+    <!-- Global Machine Status Badge -->
+    <div class="global-status-bar">
+      <div class="status-pill" id="global-machine-state">
+        <span class="status-dot" id="global-dot"></span>
+        <span class="status-label" id="global-state-text">CONNECTING…</span>
+      </div>
+      <div class="status-pill status-pill--alarm hidden" id="global-alarm-pill">
+        <span class="status-dot status-dot--alarm"></span>
+        <span id="global-alarm-text">NO ALARMS</span>
+      </div>
+    </div>
+
+    <!-- Auth state -->
+    <div class="header-auth">
+      {% if session.get('logged_in') %}
+        <span class="auth-user">
+          <span class="auth-icon">◈</span>
+          {{ session.get('username', 'OPERATOR') | upper }}
+        </span>
+        <a href="#" class="btn btn--ghost btn--sm">LOGOUT</a>
+      {% else %}
+        <span class="auth-user auth-user--anon">
+          <span class="auth-icon">◇</span>
+          NOT LOGGED IN
+        </span>
+        <a href="{{ url_for('login') }}" class="btn btn--ghost btn--sm">LOGIN</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════ NAV ═════ -->
+  <nav class="site-nav">
+    <a href="#"
+       class="nav-link {% if request.endpoint == 'machine_state' %}nav-link--active{% endif %}">
+      <span class="nav-icon">◈</span> MACHINE STATE
+    </a>
+    <a href="{{ url_for('setup') }}"
+       class="nav-link {% if request.endpoint == 'setup' %}nav-link--active{% endif %}">
+      <span class="nav-icon">⚙</span> SETUP
+    </a>
+    <div class="nav-spacer"></div>
+    <div class="nav-clock" id="nav-clock">--:--:--</div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════ MAIN ════ -->
+  <main class="site-main">
+    <!-- {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash flash--{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %} -->
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ═══════════════════════════════════════ FOOTER ══ -->
+  <footer class="site-footer">
+    <span>EmberTech CNC © 2025</span>
+    <span class="footer-sep">|</span>
+    <span id="footer-connection-state">● LIVE</span>
+    <span class="footer-sep">|</span>
+    <span>POLL INTERVAL: 500ms</span>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/status.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/actions.js') }}"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
