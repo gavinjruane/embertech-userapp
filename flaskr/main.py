@@ -73,21 +73,6 @@ def logout():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # login_form = LoginForm()
-    # credential = LoginCredential("", "")
-
-    # if request.method == "GET":
-    #     return render_template("login.html", form=login_form)
-    # elif request.method == "POST" and login_form.validate_on_submit():
-    #     login_form.populate_obj(credential)
-    #     status, user = check_password(credential)
-    #     if status:
-    #         login_user(user)
-    #         return f'<h1>Success!</h1>'
-    #     else:
-    #         return f'<h1>NOT a success!</h1>'
-    # else:
-    #     return f'<h1>Unknown method</h1>'
     if request.method == "GET":
         return render_template("login.html")
     elif request.method == "POST":
@@ -176,6 +161,8 @@ def setup():
 def machine_state():
     if request.method == 'GET':
         return render_template("machine_state.html")
+    else:
+        return '<h1>Method POST not available for route "machine_state".', 405
     
 
 @app.route('/upload', methods=['POST'])
