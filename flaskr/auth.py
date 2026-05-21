@@ -36,10 +36,16 @@ def check_password(credential: LoginCredential) -> tuple[bool, User | None]:
     except DoesNotExist:
         return False, None
 
-    if bcrypt.checkpw(credential.password.encode("utf-8"), candidate.password.encode("utf-8")):
-        return True, candidate
-    else:
+    stored_password = candidate.password or ""
+    if stored_password.startswith("$2"):
+        # Bcrypt-hashed password
+        if bcrypt.checkpw(credential.password.encode("utf-8"), stored_password.encode("utf-8")):
+            return True, candidate
         return False, None
+    # Legacy plaintext password fallback for sample / dev data
+    if credential.password == stored_password:
+        return True, candidate
+    return False, None
 
 
 def create_user(credential: SignupCredential) -> bool:

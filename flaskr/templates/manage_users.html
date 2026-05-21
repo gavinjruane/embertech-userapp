@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Manage Users — EmberTech CNC{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="page-title-icon">👥</span>
+    MANAGE USERS
+  </h1>
+  <div class="page-meta">Admins can change roles or delete users.</div>
+</div>
+
+<section class="card">
+  <div class="card-header"><span class="card-title">Users</span></div>
+  <div class="card-body">
+    <table class="table" id="users-table">
+      <thead>
+        <tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function fetchUsers() {
+    const res = await fetch('/api/users');
+    const j = await res.json();
+    const tbody = document.querySelector('#users-table tbody');
+    tbody.innerHTML = '';
+    j.users.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.username}</td>
+        <td>${u.name}</td>
+        <td>
+          <select data-username="${u.username}" class="role-select">
+            <option value="1" ${u.role_id==1? 'selected' : ''}>Administrator</option>
+            <option value="2" ${u.role_id==2? 'selected' : ''}>Standard</option>
+          </select>
+        </td>
+        <td>
+          <button class="btn btn--danger btn--sm delete-user" data-username="${u.username}">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // bind events
+    document.querySelectorAll('.role-select').forEach(sel => {
+      sel.addEventListener('change', async (ev) => {
+        const username = ev.target.dataset.username;
+        const role_id = parseInt(ev.target.value, 10);
+        const resp = await fetch(`/api/users/${username}/role`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({role_id}) });
+        const jr = await resp.json();
+        if (!jr.success) alert('Error: ' + jr.message);
+        else fetchUsers();
+      });
+    });
+
+    document.querySelectorAll('.delete-user').forEach(btn => {
+      btn.addEventListener('click', async (ev) => {
+        const username = ev.target.dataset.username;
+        if (!confirm(`Delete user ${username}?`)) return;
+        const resp = await fetch(`/api/users/${username}`, { method: 'DELETE' });
+        const jr = await resp.json();
+        if (!jr.success) alert('Error: ' + jr.message);
+        else fetchUsers();
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', fetchUsers);
+</script>
+{% endblock %}

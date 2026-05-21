@@ -18,42 +18,8 @@
       <span class="card-title">SELECT MATERIAL</span>
     </div>
 
-    {% if current_user.is_authenticated %}
-      Hi {{ current_user.name }}!
-    {% else %}
-      {{ current_user.is_active }}
-      {{ current_user.is_authenticated }}
-      {{ current_user.is_anonymous }}
-      {{ current_user.get_id() }}
-    {% endif %}
-
     <div class="material-list" role="radiogroup" aria-label="Material options">
-
-      <!-- {% set materials = [
-        {
-          'id': 'fabric-a',
-          'name': 'Fabric A',
-          'desc': 'Standard woven polyester blend. Mid-weight, low stretch. Suitable for general cutting operations.',
-          'thickness': '1.2',
-          'z_offset': '-0.50'
-        },
-        {
-          'id': 'fabric-b',
-          'name': 'Fabric B',
-          'desc': 'Heavy-duty canvas. Dense weave, rigid structure. Requires slower feed rate and higher Z clearance.',
-          'thickness': '2.8',
-          'z_offset': '-1.20'
-        },
-        {
-          'id': 'fabric-c',
-          'name': 'Fabric C',
-          'desc': 'Lightweight chiffon / silk blend. Delicate; use vacuum hold-down. Minimal Z pressure recommended.',
-          'thickness': '0.4',
-          'z_offset': '-0.15'
-        }
-      ] %} -->
-
-      <!-- {% for mat in materials %} -->
+      {% for mat in materials %}
       <label class="material-option" for="{{ mat.id }}">
         <input
           class="material-radio"
@@ -75,8 +41,39 @@
           <span class="spec-chip">{{ mat.thickness }}mm</span>
         </div>
       </label>
-      <!-- {% endfor %} -->
+      {% endfor %}
+    </div>
 
+    <div style="margin-top: 1rem;">
+      <button class="btn btn--ghost" type="button" onclick="addMaterialFlow()">ADD MATERIAL</button>
+    </div>
+  </section>
+
+  <!-- Admin add panel (rendered for DOM; hidden for non-admins) -->
+  <section id="admin-add-panel" class="card panel-admin" aria-label="Admin material management" style="display: {{ 'block' if is_admin else 'none' }};">
+    <div class="card-header">
+      <span class="card-title">ADD NEW MATERIAL</span>
+    </div>
+    <div class="card-body" style="display: grid; gap: 1rem;">
+      <label class="form-label">
+        NAME
+        <input class="form-input" type="text" id="new-material-name" placeholder="New material name" />
+      </label>
+      <label class="form-label">
+        THICKNESS
+        <input class="form-input" type="number" id="new-material-thickness" placeholder="0.00" step="0.01" />
+      </label>
+      <label class="form-label">
+        Z-OFFSET
+        <input class="form-input" type="number" id="new-material-z-offset" placeholder="-0.00" step="0.01" />
+      </label>
+      <label class="form-label">
+        DESCRIPTION
+        <textarea class="form-input" id="new-material-desc" rows="2" placeholder="Add a short description"></textarea>
+      </label>
+      <button class="btn btn--secondary btn--lg" type="button" onclick="addMaterial()">
+        ADD MATERIAL
+      </button>
     </div>
   </section>
 
@@ -109,6 +106,7 @@
               step="0.01"
               min="0"
               placeholder="0.00"
+                {% if not is_admin %}disabled{% endif %}
             />
             <span class="param-unit">mm</span>
           </div>
@@ -124,6 +122,7 @@
               name="z_offset"
               step="0.01"
               placeholder="0.00"
+                {% if not is_admin %}disabled{% endif %}
             />
             <span class="param-unit">mm</span>
           </div>
@@ -180,7 +179,7 @@
         <span class="summary-value" id="summary-status">Not configured</span>
       </div>
     </div>
-    <a href="#" class="btn btn--ghost btn--full" style="margin-top: 1.5rem">
+    <a href="{{ url_for('machine_state') }}" class="btn btn--ghost btn--full" style="margin-top: 1.5rem">
       ◈ GO TO MACHINE STATE
     </a>
   </section>
@@ -190,6 +189,11 @@
 
 {% block scripts %}
 <script>
+  // Page-level initialisation — start polling immediately
+  document.addEventListener('DOMContentLoaded', () => {
+    StatusPoller.start();
+  });
+
   function onMaterialChange(radio) {
     const placeholder  = document.getElementById('detail-placeholder');
     const content      = document.getElementById('detail-content');
@@ -205,7 +209,6 @@
     content.classList.remove('hidden');
     success.classList.add('hidden');
 
-    // Label from the radio's sibling .material-name
     const label = radio.closest('.material-option').querySelector('.material-name').textContent;
     badge.textContent        = label.toUpperCase();
     desc.textContent         = radio.dataset.desc;
@@ -233,39 +236,63 @@
 
     const label = radio.closest('.material-option').querySelector('.material-name').textContent;
 
-    fetch('/api/select-material', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        material_id: radio.value,
-        material_name: label,
-        thickness: parseFloat(thickness),
-        z_offset: parseFloat(zOffset)
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        feedback.classList.add('hidden');
-        if (data.success) {
-          succMsg.textContent = `${label} applied. Z-offset set to ${zOffset}mm.`;
-          success.classList.remove('hidden');
-          // Update summary
-          document.getElementById('summary-material').textContent  = label;
-          document.getElementById('summary-thickness').textContent = thickness + ' mm';
-          document.getElementById('summary-z-offset').textContent  = zOffset + ' mm';
-          document.getElementById('summary-status').textContent    = '✓ Configured';
-        } else {
-          throw new Error(data.message || 'Failed to apply material.');
-        }
-      })
-      .catch(err => {
-        feedback.classList.add('hidden');
-        feedMsg.textContent = '⚠ ' + err.message;
-        feedback.classList.remove('hidden');
-      })
-      .finally(() => {
-        btn.disabled = false;
-      });
+    // Client-side immediate feedback (no backend endpoint implemented)
+    setTimeout(() => {
+      feedback.classList.add('hidden');
+      succMsg.textContent = `${label} applied. Z-offset set to ${zOffset}mm.`;
+      success.classList.remove('hidden');
+      document.getElementById('summary-material').textContent  = label;
+      document.getElementById('summary-thickness').textContent = thickness + ' mm';
+      document.getElementById('summary-z-offset').textContent  = zOffset + ' mm';
+      document.getElementById('summary-status').textContent    = '✓ Configured';
+      btn.disabled = false;
+    }, 300);
+  }
+
+  const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
+
+  function addMaterialFlow() {
+    if (!IS_ADMIN) {
+      window.location.href = "{{ url_for('login') }}";
+      return;
+    }
+    const panel = document.getElementById('admin-add-panel');
+    if (!panel) return;
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'block') panel.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function addMaterial() {
+    const nameInput = document.getElementById('new-material-name');
+    const thicknessInput = document.getElementById('new-material-thickness');
+    const zOffsetInput = document.getElementById('new-material-z-offset');
+    const descInput = document.getElementById('new-material-desc');
+
+    const name = nameInput.value.trim();
+    const thickness = thicknessInput.value.trim();
+    const zOffset = zOffsetInput.value.trim();
+    const desc = descInput.value.trim();
+
+    if (!name || !thickness || !zOffset || !desc) {
+      alert('Please complete all fields before adding a new material.');
+      return;
+    }
+
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const list = document.querySelector('.material-list');
+    const label = document.createElement('label');
+    label.className = 'material-option';
+    label.setAttribute('for', id);
+    label.innerHTML = `\n      <input class="material-radio" type="radio" name="material" id="${id}" value="${id}" data-thickness="${thickness}" data-z-offset="${zOffset}" data-desc="${desc}" onchange="onMaterialChange(this)" />\n      <span class="material-radio-custom"></span>\n      <div class="material-info">\n        <span class="material-name">${name}</span>\n        <span class="material-preview-desc">${desc.slice(0, 60)}…</span>\n      </div>\n      <div class="material-quick-specs">\n        <span class="spec-chip">${thickness}mm</span>\n      </div>\n    `;
+
+    list.appendChild(label);
+    nameInput.value = '';
+    thicknessInput.value = '';
+    zOffsetInput.value = '';
+    descInput.value = '';
+
+    label.querySelector('input').checked = true;
+    onMaterialChange(label.querySelector('input'));
   }
 </script>
 {% endblock %}

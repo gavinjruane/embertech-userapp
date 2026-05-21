@@ -126,9 +126,9 @@
     </div>
 
     <div class="controls-secondary">
-      <a href="{{ url_for('setup') }}" class="btn btn--secondary btn--lg">
+      <button type="button" class="btn btn--secondary btn--lg" onclick="openLoadFileDialog()">
         <span>⬡</span> LOAD NEW FILE
-      </a>
+      </button>
     </div>
 
     <!-- Action feedback bar -->
@@ -147,5 +147,50 @@
   document.addEventListener('DOMContentLoaded', () => {
     StatusPoller.start();
   });
+  
+  // Hidden file input to trigger native file picker
+  function openLoadFileDialog() {
+    let input = document.getElementById('file-input');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'file';
+      input.id = 'file-input';
+      input.accept = '.nc,.gcode,.txt';
+      input.style.display = 'none';
+      input.addEventListener('change', (ev) => {
+        const files = ev.target.files;
+        if (files && files.length) uploadFile(files[0]);
+      });
+      document.body.appendChild(input);
+    }
+    input.value = null; // reset
+    input.click();
+  }
+
+  function uploadFile(file) {
+    const feedback = document.getElementById('action-feedback');
+    const msg = document.getElementById('action-feedback-msg');
+    feedback.classList.remove('hidden');
+    msg.textContent = `Uploading ${file.name}...`;
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    fetch('/upload', { method: 'POST', body: fd })
+      .then(r => r.json())
+      .then(j => {
+        if (j.success) {
+          document.getElementById('current-file').textContent = file.name;
+          msg.textContent = 'Upload successful';
+        } else {
+          msg.textContent = 'Upload failed: ' + (j.message || 'unknown');
+        }
+      })
+      .catch(err => {
+        msg.textContent = 'Upload error';
+        console.error(err);
+      })
+      .finally(() => setTimeout(() => feedback.classList.add('hidden'), 1200));
+  }
 </script>
 {% endblock %}

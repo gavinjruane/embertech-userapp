@@ -34,12 +34,12 @@
 
     <!-- Auth state -->
     <div class="header-auth">
-      {% if session.get('logged_in') %}
+      {% if current_user.is_authenticated %}
         <span class="auth-user">
           <span class="auth-icon">◈</span>
-          {{ session.get('username', 'OPERATOR') | upper }}
+          {{ current_user.username | upper }}
         </span>
-        <a href="#" class="btn btn--ghost btn--sm">LOGOUT</a>
+        <a href="{{ url_for('logout') }}" class="btn btn--ghost btn--sm">LOGOUT</a>
       {% else %}
         <span class="auth-user auth-user--anon">
           <span class="auth-icon">◇</span>
@@ -52,7 +52,7 @@
 
   <!-- ═══════════════════════════════════════ NAV ═════ -->
   <nav class="site-nav">
-    <a href="#"
+    <a href="{{ url_for('machine_state') }}"
        class="nav-link {% if request.endpoint == 'machine_state' %}nav-link--active{% endif %}">
       <span class="nav-icon">◈</span> MACHINE STATE
     </a>
@@ -60,6 +60,12 @@
        class="nav-link {% if request.endpoint == 'setup' %}nav-link--active{% endif %}">
       <span class="nav-icon">⚙</span> SETUP
     </a>
+    {% if current_user.is_authenticated and current_user.role_id == 1 %}
+    <a href="{{ url_for('manage_users') }}"
+       class="nav-link {% if request.endpoint == 'manage_users' %}nav-link--active{% endif %}">
+      <span class="nav-icon">👥</span> MANAGE USERS
+    </a>
+    {% endif %}
     <div class="nav-spacer"></div>
     <div class="nav-clock" id="nav-clock">--:--:--</div>
   </nav>
