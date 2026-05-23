@@ -34,6 +34,7 @@
 
     <!-- Auth state -->
     <div class="header-auth">
+      <button id="theme-toggle" class="btn btn--ghost btn--sm" type="button" aria-pressed="false" title="Toggle theme">🌙</button>
       {% if current_user.is_authenticated %}
         <span class="auth-user">
           <span class="auth-icon">◈</span>
@@ -96,6 +97,7 @@
 
   <script src="{{ url_for('static', filename='js/status.js') }}"></script>
   <script src="{{ url_for('static', filename='js/actions.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

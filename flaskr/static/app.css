@@ -64,6 +64,52 @@
   --t-med:  220ms ease;
 }
 
+/* Light theme overrides */
+[data-theme="light"] {
+  --c-bg:           #f6f7f8; /* overall page background — very light gray */
+  --c-surface:      #f3f5f7; /* primary surface slightly gray (dim whites) */
+  --c-surface-2:    #eef1f3; /* secondary surface */
+  --c-surface-3:    #e9ecef; /* subtle panels */
+  --c-border:       #d8dee4;
+  --c-border-bright:#cbd4db;
+
+  --c-text:         #2f2a14; /* warm charcoal text */
+  --c-text-dim:     #7a5f34;
+  --c-text-muted:   #8a7255;
+
+  --c-amber:        #d18c18;
+  --c-amber-dim:    #a37213;
+  --c-amber-glow:   rgba(209,140,24,0.14);
+  --c-amber-glow-2: rgba(209,140,24,0.08);
+
+  --c-green:        #1f7a3f;
+  --c-green-dim:    #1a5f33;
+  --c-green-glow:   rgba(31,122,63,0.08);
+
+  --c-red:          #a72b35;
+  --c-red-dim:      #7a1e25;
+  --c-red-glow:     rgba(167,43,53,0.08);
+
+  --c-yellow:       #b58900;
+  --c-yellow-glow:  rgba(181,137,0,0.06);
+
+  --c-blue:         #2f66b8;
+  --c-blue-glow:    rgba(47,102,184,0.06);
+}
+
+[data-theme="light"] .brand-name,
+[data-theme="light"] .page-title,
+[data-theme="light"] .page-title-icon,
+[data-theme="light"] .nav-link--active,
+[data-theme="light"] .card-title,
+[data-theme="light"] .state-text {
+  color: var(--c-amber);
+}
+
+/* Theme toggle button tweaks */
+#theme-toggle { margin-right: 0.5rem; }
+#theme-toggle[aria-pressed="true"] { background: var(--c-amber); color: var(--c-text); }
+
 /* ── RESET ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -90,7 +136,7 @@ body {
 }
 
 a { color: var(--c-amber); text-decoration: none; }
-a:hover { color: #fff; }
+a:hover { color: var(--c-text); }
 
 .mono { font-family: var(--font-mono); }
 .hidden { display: none !important; }
@@ -131,7 +177,7 @@ a:hover { color: #fff; }
   font-size: 1.4rem;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #fff;
+  color: var(--c-text);
   line-height: 1;
 }
 .brand-name strong { color: var(--c-amber); }
@@ -295,7 +341,7 @@ a:hover { color: #fff; }
   font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #fff;
+  color: var(--c-text);
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -480,7 +526,7 @@ a:hover { color: #fff; }
 
 .btn--stop {
   background: var(--c-red);
-  color: #fff;
+  color: var(--c-text);
 }
 .btn--stop:hover:not(:disabled) {
   background: #ff4d5e;
@@ -540,7 +586,7 @@ a:hover { color: #fff; }
 .axis-value {
   font-family: var(--font-mono);
   font-size: 1.6rem;
-  color: #fff;
+  color: var(--c-text);
   letter-spacing: 0.05em;
   flex: 1;
   text-align: right;
@@ -571,7 +617,7 @@ a:hover { color: #fff; }
   font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #fff;
+  color: var(--c-text);
 }
 
 .state-states {
