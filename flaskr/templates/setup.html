@@ -126,6 +126,47 @@
             />
             <span class="param-unit">mm</span>
           </div>
+          <div class="param-note" style="font-size: 0.75rem; color: var(--c-text-muted); margin-top: 0.25rem;">
+            (Z-offset (mm): Knife height - negative -> down; positive -> up)
+          </div>
+        </div>
+
+        <div class="param-block">
+          <label class="param-label" for="z-offset-multiplier">Multiplier</label>
+          <div class="param-value-row">
+            <input
+              class="param-input mono"
+              type="number"
+              id="z-offset-multiplier"
+              name="z_offset_multiplier"
+              step="1"
+              min="1"
+              value="1"
+              placeholder="1"
+              onchange="updateScaledZOffset()"
+              oninput="updateScaledZOffset()"
+            />
+            <span class="param-unit">×</span>
+          </div>
+          <div class="param-note" style="font-size: 0.75rem; color: var(--c-text-muted); margin-top: 0.25rem;">
+            Multiplier for stacked layers
+          </div>
+        </div>
+
+        <div class="param-block">
+          <label class="param-label" for="param-z-offset-scaled">SCALED Z-OFFSET</label>
+          <div class="param-value-row">
+            <input
+              class="param-input mono"
+              type="number"
+              id="param-z-offset-scaled"
+              name="z_offset_scaled"
+              step="0.01"
+              placeholder="0.00"
+              disabled
+            />
+            <span class="param-unit">mm</span>
+          </div>
         </div>
       </div>
 
@@ -189,10 +230,14 @@
 
 {% block scripts %}
 <script>
-  // Page-level initialisation — start polling immediately
   document.addEventListener('DOMContentLoaded', () => {
     StatusPoller.start();
+    fetchMaterials().catch(() => {
+      // Keep the server-rendered list if the API call fails.
+    });
   });
+
+  const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
 
   function onMaterialChange(radio) {
     const placeholder  = document.getElementById('detail-placeholder');
@@ -201,6 +246,7 @@
     const desc         = document.getElementById('detail-desc');
     const thickness    = document.getElementById('param-thickness');
     const zOffset      = document.getElementById('param-z-offset');
+    const multiplier   = document.getElementById('z-offset-multiplier');
     const selectBtn    = document.getElementById('btn-select-material');
     const warning      = document.getElementById('setup-warning');
     const success      = document.getElementById('setup-success');
@@ -214,8 +260,18 @@
     desc.textContent         = radio.dataset.desc;
     thickness.value          = radio.dataset.thickness;
     zOffset.value            = radio.dataset.zOffset;
+    multiplier.value         = '1';
     selectBtn.disabled       = false;
     warning.classList.remove('hidden');
+
+    updateScaledZOffset();
+  }
+
+  function updateScaledZOffset() {
+    const zOffset = parseFloat(document.getElementById('param-z-offset').value) || 0;
+    const multiplier = parseInt(document.getElementById('z-offset-multiplier').value, 10) || 1;
+    const scaledValue = (zOffset * multiplier).toFixed(2);
+    document.getElementById('param-z-offset-scaled').value = scaledValue;
   }
 
   function selectMaterial() {
@@ -228,7 +284,7 @@
     const success   = document.getElementById('setup-success');
     const succMsg   = document.getElementById('setup-success-msg');
     const thickness = document.getElementById('param-thickness').value;
-    const zOffset   = document.getElementById('param-z-offset').value;
+    const zOffset   = document.getElementById('param-z-offset-scaled').value;
 
     btn.disabled = true;
     feedback.classList.remove('hidden');
@@ -236,7 +292,6 @@
 
     const label = radio.closest('.material-option').querySelector('.material-name').textContent;
 
-    // Client-side immediate feedback (no backend endpoint implemented)
     setTimeout(() => {
       feedback.classList.add('hidden');
       succMsg.textContent = `${label} applied. Z-offset set to ${zOffset}mm.`;
@@ -249,7 +304,83 @@
     }, 300);
   }
 
-  const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
+  function renderMaterialEntry(mat) {
+    const label = document.createElement('label');
+    label.className = 'material-option';
+    label.htmlFor = mat.id;
+
+    const input = document.createElement('input');
+    input.className = 'material-radio';
+    input.type = 'radio';
+    input.name = 'material';
+    input.id = mat.id;
+    input.value = mat.id;
+    input.dataset.thickness = mat.thickness;
+    input.dataset.zOffset = mat.z_offset;
+    input.dataset.desc = mat.desc;
+    input.onchange = function () { onMaterialChange(this); };
+
+    const radioCustom = document.createElement('span');
+    radioCustom.className = 'material-radio-custom';
+
+    const info = document.createElement('div');
+    info.className = 'material-info';
+    const title = document.createElement('span');
+    title.className = 'material-name';
+    title.textContent = mat.name;
+    const preview = document.createElement('span');
+    preview.className = 'material-preview-desc';
+    preview.textContent = mat.desc.length > 60 ? `${mat.desc.slice(0, 60)}…` : mat.desc;
+    info.append(title, preview);
+
+    const specs = document.createElement('div');
+    specs.className = 'material-quick-specs';
+    const chip = document.createElement('span');
+    chip.className = 'spec-chip';
+    chip.textContent = `${mat.thickness}mm`;
+    specs.appendChild(chip);
+
+    label.append(input, radioCustom, info, specs);
+
+    if (IS_ADMIN) {
+      const actionRow = document.createElement('div');
+      actionRow.className = 'material-actions';
+      actionRow.style.display = 'flex';
+      actionRow.style.justifyContent = 'flex-end';
+      actionRow.style.marginTop = '0.75rem';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'btn btn--ghost btn--xs';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.onclick = function (event) {
+        event.stopPropagation();
+        deleteMaterial(mat.id, label);
+      };
+      actionRow.appendChild(deleteBtn);
+      label.appendChild(actionRow);
+    }
+
+    return label;
+  }
+
+  function populateMaterialList(materials) {
+    const list = document.querySelector('.material-list');
+    if (!list) return;
+    list.innerHTML = '';
+    materials.forEach((mat) => list.appendChild(renderMaterialEntry(mat)));
+  }
+
+  function fetchMaterials() {
+    return fetch('/api/materials')
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.success) {
+          throw new Error(data.message || 'Unable to load materials.');
+        }
+        populateMaterialList(data.materials);
+      });
+  }
 
   function addMaterialFlow() {
     if (!IS_ADMIN) {
@@ -278,21 +409,56 @@
       return;
     }
 
-    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const list = document.querySelector('.material-list');
-    const label = document.createElement('label');
-    label.className = 'material-option';
-    label.setAttribute('for', id);
-    label.innerHTML = `\n      <input class="material-radio" type="radio" name="material" id="${id}" value="${id}" data-thickness="${thickness}" data-z-offset="${zOffset}" data-desc="${desc}" onchange="onMaterialChange(this)" />\n      <span class="material-radio-custom"></span>\n      <div class="material-info">\n        <span class="material-name">${name}</span>\n        <span class="material-preview-desc">${desc.slice(0, 60)}…</span>\n      </div>\n      <div class="material-quick-specs">\n        <span class="spec-chip">${thickness}mm</span>\n      </div>\n    `;
+    fetch('/api/materials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, thickness, z_offset: zOffset, desc })
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.success) {
+          throw new Error(data.message || 'Could not save material.');
+        }
 
-    list.appendChild(label);
-    nameInput.value = '';
-    thicknessInput.value = '';
-    zOffsetInput.value = '';
-    descInput.value = '';
+        const list = document.querySelector('.material-list');
+        const entry = renderMaterialEntry(data.material);
+        list.appendChild(entry);
 
-    label.querySelector('input').checked = true;
-    onMaterialChange(label.querySelector('input'));
+        const input = entry.querySelector('input[name="material"]');
+        if (input) {
+          input.checked = true;
+          onMaterialChange(input);
+        }
+
+        nameInput.value = '';
+        thicknessInput.value = '';
+        zOffsetInput.value = '';
+        descInput.value = '';
+      })
+      .catch((error) => {
+        alert(error.message || 'Unable to save material.');
+      });
+  }
+
+  function deleteMaterial(materialId, entryElement) {
+    if (!confirm('Delete this material?')) {
+      return;
+    }
+
+    fetch(`/api/materials/${encodeURIComponent(materialId)}`, { method: 'DELETE' })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.success) {
+          throw new Error(data.message || 'Could not delete material.');
+        }
+
+        if (entryElement && entryElement.parentNode) {
+          entryElement.parentNode.removeChild(entryElement);
+        }
+      })
+      .catch((error) => {
+        alert(error.message || 'Unable to delete material.');
+      });
   }
 </script>
 {% endblock %}

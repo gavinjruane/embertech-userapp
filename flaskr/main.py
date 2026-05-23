@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
+import re
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from dotenv import dotenv_values
@@ -7,7 +8,7 @@ from peewee import DoesNotExist
 
 from flaskr import db
 from flaskr.auth import check_password, LoginCredential, SignupCredential, hash_password, create_user
-from flaskr.db import db_handle, User, Role
+from flaskr.db import db_handle, User, Role, Material
 from flaskr.forms import LoginForm, SignupForm
 
 # .env File
@@ -31,7 +32,7 @@ login_manager.init_app(app)
 # Database
 db_handle.init(config["DATABASE_PATH"])
 db_handle.connect()
-db_handle.create_tables([db.Role, db.User])
+db_handle.create_tables([db.Role, db.User, Material])
 db_handle.close()
 
 
@@ -126,9 +127,23 @@ def signup():
         return f'<h1>Unknown method</h1>'
 
 
-@app.route('/setup', methods=['GET', 'POST'])
-def setup():
-    materials = [
+def _normalize_material_id(name: str) -> str:
+    base_id = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+    if not base_id:
+        base_id = 'material'
+    candidate = base_id
+    suffix = 1
+    while Material.select().where(Material.id == candidate).exists():
+        candidate = f"{base_id}-{suffix}"
+        suffix += 1
+    return candidate
+
+
+def _ensure_default_materials() -> None:
+    if Material.select().count() > 0:
+        return
+
+    defaults = [
         {
             'id': 'fabric-a',
             'name': 'Fabric A',
@@ -151,10 +166,76 @@ def setup():
             'z_offset': '-0.15'
         }
     ]
+
+    for material in defaults:
+        Material.create(
+            id=material['id'],
+            name=material['name'],
+            desc=material['desc'],
+            thickness=material['thickness'],
+            z_offset=material['z_offset']
+        )
+
+
+@app.route('/setup', methods=['GET', 'POST'])
+def setup():
+    _ensure_default_materials()
+    materials = list(Material.select().dicts())
     is_admin = False
     if current_user.is_authenticated:
         is_admin = getattr(current_user, 'role_id', None) == 1
     return render_template("setup.html", materials=materials, is_admin=is_admin)
+
+
+@app.route('/api/materials', methods=['GET'])
+def api_get_materials():
+    materials = list(Material.select().dicts())
+    return jsonify(success=True, materials=materials)
+
+
+@app.route('/api/materials', methods=['POST'])
+def api_add_material():
+    if not _require_admin():
+        return jsonify(success=False, message='Forbidden'), 403
+
+    data = request.get_json(silent=True) or {}
+    name = str(data.get('name', '')).strip()
+    desc = str(data.get('desc', '')).strip()
+    thickness = str(data.get('thickness', '')).strip()
+    z_offset = str(data.get('z_offset', '')).strip()
+
+    if not name or not desc or not thickness or not z_offset:
+        return jsonify(success=False, message='Missing required fields'), 400
+
+    material_id = _normalize_material_id(name)
+    material = Material.create(
+        id=material_id,
+        name=name,
+        desc=desc,
+        thickness=thickness,
+        z_offset=z_offset
+    )
+
+    return jsonify(success=True, material={
+        'id': material.id,
+        'name': material.name,
+        'desc': material.desc,
+        'thickness': material.thickness,
+        'z_offset': material.z_offset
+    })
+
+
+@app.route('/api/materials/<material_id>', methods=['DELETE'])
+def api_delete_material(material_id):
+    if not _require_admin():
+        return jsonify(success=False, message='Forbidden'), 403
+
+    try:
+        material = Material.get(Material.id == material_id)
+        material.delete_instance()
+        return jsonify(success=True)
+    except Material.DoesNotExist:
+        return jsonify(success=False, message='Material not found'), 404
 
 
 @app.route('/machine_state', methods=['GET', 'POST'])
@@ -184,6 +265,15 @@ def upload_file():
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
     return jsonify(success=True, message='Uploaded', path=save_path)
+
+
+@app.route('/api/estop', methods=['POST'])
+def api_estop():
+    payload = request.get_json(silent=True) or {}
+    source = payload.get('source', 'unknown')
+    app.logger.info('E-stop request received from %s', source)
+    # TODO: wire this into the machine control hardware or API.
+    return jsonify(success=True, message='E-stop request received', source=source)
 
 
 def _require_admin():

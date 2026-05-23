@@ -14,3 +14,13 @@ CREATE TABLE Roles(
 
     PRIMARY KEY (id)
 );
+
+CREATE TABLE Materials(
+    id VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    desc TEXT NOT NULL,
+    thickness VARCHAR(64) NOT NULL,
+    z_offset VARCHAR(64) NOT NULL,
+
+    PRIMARY KEY (id)
+);

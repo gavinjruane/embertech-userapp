@@ -21,3 +21,11 @@ class User(UserMixin, BaseModel):
 
     def get_id(self) -> str:
         return self.username
+
+
+class Material(BaseModel):
+    id = CharField(primary_key=True)
+    name = TextField()
+    desc = TextField()
+    thickness = TextField()
+    z_offset = TextField()
