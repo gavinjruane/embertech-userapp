@@ -1,6 +1,8 @@
 import subprocess
 from pathlib import Path
 
+# pip install svg2gcode ezdxf
+
 input_file = Path("input.dxf")
 output_file = Path("output.ngc")
 
