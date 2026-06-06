@@ -80,7 +80,7 @@
       <div class="job-progress-row">
         <span class="job-file-label">PROGRESS</span>
         <div class="job-progress-bar">
-          <div class="job-progress-fill" id="job-progress-fill" style="width: 0%"></div>
+          <div class="job-progress-fill" id="job-progress-fill" style="width: 0"></div>
         </div>
         <span class="job-progress-pct" id="job-progress-pct">0%</span>
       </div>
@@ -143,7 +143,7 @@
 
 {% block scripts %}
 <script>
-  // Page-level initialisation — start polling immediately
+  // Page-level initialization — start polling immediately
   document.addEventListener('DOMContentLoaded', () => {
     StatusPoller.start();
   });
@@ -176,7 +176,7 @@
     const fd = new FormData();
     fd.append('file', file);
 
-    fetch('/upload', { method: 'POST', body: fd })
+    fetch('/api/upload_file', { method: 'POST', body: fd })
       .then(r => r.json())
       .then(j => {
         if (j.success) {

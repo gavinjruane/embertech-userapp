@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 import bcrypt
+from flask_login import current_user
 from peewee import DoesNotExist, PeeweeException
 
 from flaskr.db import User
@@ -60,3 +61,8 @@ def create_user(credential: SignupCredential) -> bool:
     except PeeweeException:
         return False
 
+
+def require_admin(current_user):
+    if not current_user.is_authenticated or getattr(current_user, 'role_id', None) != 1:
+        return False
+    return True
