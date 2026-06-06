@@ -145,9 +145,33 @@
 <script>
   // Page-level initialization — start polling immediately
   document.addEventListener('DOMContentLoaded', () => {
-    StatusPoller.start();
+    console.log("Started polling");
+    pollForStatus();
   });
-  
+
+  function updateUI (state) {
+    console.log(state);
+
+    const stateLabelElement = document.getElementById("state-text");
+    stateLabelElement.textContent = state["task_state"].toUpperCase();
+
+    // let activeStateChip;
+    // switch ( state["task_state"] ) {
+    //   case "on":
+    //     activeStateChip = document.getElementById("chip-ready");
+    //     activeStateChip.style.backgroundColor = "black";
+    //     break;
+    //   case "off":
+    //   case "estop":
+    //     activeStateChip = document.getElementById("chip-stopped");
+    //     activeStateChip.style.backgroundColor = "black";
+    //     break;
+    //   case ""
+    //   default:
+    //     break;
+    // }
+  }
+
   // Hidden file input to trigger native file picker
   function openLoadFileDialog() {
     let input = document.getElementById('file-input');

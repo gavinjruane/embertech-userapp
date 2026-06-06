@@ -1,14 +1,15 @@
-const StatusPoller = {
-  _interval: null,
-  start() {
-    if (this._interval) return;
-    this.refresh();
-    this._interval = setInterval(() => this.refresh(), 2500);
-  },
-  refresh() {
-    // Placeholder for future backend status polling.
+async function pollForStatus () {
+  try {
+    const response = await fetch("api/state");
+    const status = await response.json();
+
+    updateUI(status["state"]);
+  } catch ( error ) {
+    console.warn("Polling failed with error", error);
+  } finally {
+    setTimeout(pollForStatus, 3000);
   }
-};
+}
 
 const AlarmManager = {
   alarms: [],

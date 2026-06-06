@@ -9,6 +9,7 @@ from flaskr import db
 from flaskr.auth import check_password, LoginCredential, SignupCredential, hash_password, create_user, require_admin
 from flaskr.db import db_handle, User, Role, Material
 from flaskr.forms import SignupForm
+from flaskr.machine.cnc import Machine
 from flaskr.util import _ensure_default_materials, _normalize_material_id
 
 # .env File
@@ -35,7 +36,6 @@ db_handle.connect()
 db_handle.create_tables([db.Role, db.User, Material])
 db_handle.close()
 
-
 ## Database Connection Handlers
 
 @app.before_request
@@ -48,6 +48,10 @@ def _db_close(exc):
     if not db_handle.is_closed():
         db_handle.close()
 
+# LinuxCNC
+
+machine = Machine()
+machine.connect()
 
 # User Loader
 
@@ -144,6 +148,7 @@ def setup():
 @app.route('/machine_state', methods=['GET', 'POST'])
 def machine_state():
     if request.method == 'GET':
+        print(machine.is_ready())
         return render_template("machine_state.html")
     else:
         return '<h1>Method POST not available for route "machine_state".', 405
@@ -157,6 +162,13 @@ def manage_users():
 
 
 # API Routes
+
+@app.route('/api/state', methods=["GET"])
+def api_get_state():
+    state = machine.state()
+    print(state)
+
+    return jsonify(success=True, state=state)
 
 @app.route('/api/materials', methods=['GET'])
 def api_get_materials():
