@@ -219,15 +219,17 @@ def api_upload_file():
         elif not allowed_file(file.filename):
             return jsonify(success=False, message='File type not allowed'), 400
 
-    upload_dir = os.path.join(app.instance_path, 'uploads')
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(file.filename)
-    save_path = os.path.join(upload_dir, filename)
-    try:
-        file.save(save_path)
-    except Exception as e:
-        return jsonify(success=False, message=str(e)), 500
-    return jsonify(success=True, message='Uploaded', path=save_path)
+        upload_dir = os.path.join(app.instance_path, 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = secure_filename(file.filename)
+        save_path = os.path.join(upload_dir, filename)
+        try:
+            file.save(save_path)
+        except Exception as e:
+            return jsonify(success=False, message=str(e)), 500
+        return jsonify(success=True, message='Uploaded', path=save_path)
+    else:
+        return jsonify(success=False, message="Filename cannot be empty"), 400
 
 
 @app.route('/api/estop', methods=['POST'])
