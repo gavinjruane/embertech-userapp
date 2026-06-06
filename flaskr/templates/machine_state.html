@@ -7,7 +7,7 @@
     <span class="page-title-icon">◈</span>
     MACHINE STATE
   </h1>
-  <div class="page-meta" id="last-updated">Last updated: --</div>
+  <div class="page-meta" id="last-updated">Last updated: <span id="last-updated-time">--</span></div>
 </div>
 
 <div class="dashboard-grid">
@@ -152,6 +152,10 @@
   function updateUI (state) {
     // console.log(state);
     window.eStopTriggered = state["is_estop"];
+
+    const now = new Date().toLocaleTimeString();
+    const lastUpdatedTimeText = document.getElementById("last-updated-time");
+    lastUpdatedTimeText.textContent = now;
 
     const stateLabelElement = document.getElementById("state-text");
     stateLabelElement.textContent = state["task_state"].toUpperCase();
