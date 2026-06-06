@@ -2,8 +2,13 @@ async function pollForStatus () {
   try {
     const response = await fetch("api/state");
     const status = await response.json();
+    // console.log("JSON", status);
+    const state = status["state"];
 
-    updateUI(status["state"]);
+    if ( state["error"] ) {
+      AlarmManager.add(state["error"]["error"]);
+    }
+    updateUI(state);
   } catch ( error ) {
     console.warn("Polling failed with error", error);
   } finally {

@@ -5,6 +5,7 @@ Stateful design here: we should keep ONE connection open, not create
 new ones. In other words, call connect once on startup.
 """
 
+
 class Machine:
     def __init__(self):
         # Initialize any data structures and information *prior* to connecting to the machine.
@@ -17,12 +18,11 @@ class Machine:
         self._is_ready: bool = False
         self._state: dict = {}
 
-    def connect(self, use_error: bool = True) -> None:
+    def connect(self) -> None:
         # Establish a persistent connection to the machine.
         self.command_channel = linuxcnc.command()
         self.stat = linuxcnc.stat()
-        if use_error:
-            self.error_channel = linuxcnc.error()
+        self.error_channel = linuxcnc.error_channel()
 
     def disconnect(self) -> None:
         # Disconnect from the machine.
@@ -38,18 +38,40 @@ class Machine:
         return (not s.estop and s.enabled and (s.homed.count(1) == s.joints) and
                 (s.interp_state == linuxcnc.INTERP_IDLE))
 
+    def get_error(self) -> dict | None:
+        e = self.error_channel.poll()
+        if e:
+            kind, text = e
+            if kind in (linuxcnc.NML_ERROR, linuxcnc.OPERATOR_ERROR):
+                return {
+                    "error": text,
+                    "type": "error"
+                }
+            else:
+                return {
+                    "error": text,
+                    "type": "information"
+                }
+
+        return None
+
     def state(self) -> dict:
         # Poll the machine and return the LinuxCNC state dictionary.
+        keys = ["is_estop", "task_state", "error", "position"]
         self.stat.poll()
 
-        return {
-            "is_estop": bool(self.stat.estop),
-            "task_state": generate_task_state(self.stat)
-        }
+        state: dict = dict.fromkeys(keys, "")
+        state["is_estop"] = bool(self.stat.estop)
+        state["task_state"] = generate_task_state(self.stat)
+        state["error"] = self.get_error()
+        state["position"] = get_position(self.stat)
+
+        return state
 
     # def estop(self) -> bool:
     #     # Send an emergency stop signal to the machine and return whether this succeeded.
     #     ...
+
 
 def generate_task_state(state):
     if state.estop:
@@ -66,6 +88,15 @@ def generate_task_state(state):
                 return "DONE"
             case _:
                 return "UNKNOWN"
+
+
+def get_position(state):
+    position = []
+
+    for i in range(state.joints):
+        position.append(round(state.joint[i]["output"], 4))
+
+    return position
 
 
 """

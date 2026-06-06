@@ -34,15 +34,15 @@
     </div>
   </section>
 
-  <!-- ══════════════════ MACHINE STATE ═════════════════════ -->
-  <section class="card panel-state" aria-label="Machine State">
+  <!-- ══════════════════ TASK STATE ═════════════════════ -->
+  <section class="card panel-state" aria-label="Task State">
     <div class="card-header">
-      <span class="card-title">MACHINE STATE</span>
+      <span class="card-title">TASK STATE</span>
     </div>
     <div class="state-display" id="state-display">
       <div class="state-indicator" id="state-indicator">
         <span class="state-dot" id="state-dot"></span>
-        <span class="state-text" id="state-text">CONNECTING</span>
+        <span class="state-text" id="state-text">UNKNOWN</span>
       </div>
       <div class="state-states">
         {% for s in ['READY', 'RUNNING', 'PAUSED', 'STOPPED', 'DONE'] %}
@@ -154,6 +154,11 @@
 
     const stateLabelElement = document.getElementById("state-text");
     stateLabelElement.textContent = state["task_state"].toUpperCase();
+
+    ["x", "y", "z"].forEach((value, index, array) => {
+      const position = document.getElementById("pos-" + value);
+      position.innerText = state["position"][index]
+    });
 
     // let activeStateChip;
     // switch ( state["task_state"] ) {
