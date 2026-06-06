@@ -68,12 +68,16 @@ class Machine:
 
         return state
 
-    # def estop(self) -> bool:
-    #     # Send an emergency stop signal to the machine and return whether this succeeded.
-    #     ...
+    def estop(self) -> None:
+        # Send an emergency stop signal to the machine.
+        self.command_channel.state(linuxcnc.STATE_ESTOP)
+
+    def estop_reset(self) -> None:
+        # Send an emergency stop reset signal (emergency stop OFF) to the machine.
+        self.command_channel.state(linuxcnc.STATE_ESTOP_RESET)
 
 
-def generate_task_state(state):
+def generate_task_state(state) -> str:
     if state.estop:
         return "STOPPED"
     else:
@@ -90,7 +94,7 @@ def generate_task_state(state):
                 return "UNKNOWN"
 
 
-def get_position(state):
+def get_position(state) -> list[float]:
     position = []
 
     for i in range(state.joints):

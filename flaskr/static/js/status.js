@@ -65,30 +65,35 @@ function setGlobalAlarm(message) {
   text.textContent = message;
 }
 
-function triggerEStop(source = 'keyboard') {
-  if (window.eStopTriggered) return;
-  window.eStopTriggered = true;
-  const message = 'Emergency stop activated via ' + source + '. Machine is halted.';
-  AlarmManager.add(message, 'E-STOP');
-  setGlobalAlarm('E-STOP ACTIVE');
-  callEStopApi(source);
+function toggleEStop() {
+  if ( window.eStopTriggered ) {
+    window.eStopTriggered = false;
+    AlarmManager.add("Emergency stop deactivated. Machine is ready.", "E-STOP RESET");
+    setGlobalAlarm("E-STOP INACTIVE");
+    callPushApi("/api/estop_reset");
+  } else {
+    window.eStopTriggered = true;
+    // const message = 'Emergency stop activated via ' + source + '. Machine is halted.';
+    AlarmManager.add("Emergency stop activated. Machine is halted.", 'E-STOP');
+    setGlobalAlarm('E-STOP ACTIVE');
+    callPushApi("/api/estop")
+  }
 }
 
-function callEStopApi(source = 'keyboard') {
-  fetch('/api/estop', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ source })
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (!data.success) {
-        console.error('E-stop API response failure', data);
-      }
+async function callPushApi(endpoint) {
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
     })
-    .catch((err) => {
-      console.warn('E-stop API request failed (no backend yet)', err);
-    });
+    const data = await response.json();
+
+    if ( ! data.success ) {
+      console.error("Push API response failed", data);
+    }
+  } catch ( error ) {
+    console.error("Push API request failed", error);
+  }
 }
 
 document.addEventListener('keydown', (event) => {

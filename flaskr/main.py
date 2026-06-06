@@ -247,10 +247,16 @@ def api_upload_file():
 @app.route('/api/estop', methods=['POST'])
 def api_estop():
     payload = request.get_json(silent=True) or {}
-    source = payload.get('source', 'unknown')
-    app.logger.info('E-stop request received from %s', source)
-    # TODO: wire this into the machine control hardware or API.
-    return jsonify(success=True, message='E-stop request received', source=source)
+    # source = payload.get('source', 'unknown')
+    # app.logger.info('E-stop request received from %s', source)
+    machine.estop()
+    return jsonify(success=True, message='Emergency stop request received successfully')
+
+
+@app.route('/api/estop_reset', methods=["POST"])
+def api_estop_reset():
+    machine.estop_reset()
+    return jsonify(success=True, message="Emergency stop reset request received successfully")
 
 
 @app.route('/api/users', methods=['GET'])

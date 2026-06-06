@@ -6,7 +6,7 @@ function machineAction(action) {
 
   if (action === 'stop') {
     msg.textContent = 'Emergency stop triggered.';
-    triggerEStop('stop-button');
+    toggleEStop();
   } else if (action === 'start') {
     msg.textContent = 'Start command queued.';
   } else if (action === 'pause') {

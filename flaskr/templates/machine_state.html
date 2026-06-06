@@ -150,14 +150,15 @@
   });
 
   function updateUI (state) {
-    console.log(state);
+    // console.log(state);
+    window.eStopTriggered = state["is_estop"];
 
     const stateLabelElement = document.getElementById("state-text");
     stateLabelElement.textContent = state["task_state"].toUpperCase();
 
     ["x", "y", "z"].forEach((value, index, array) => {
       const position = document.getElementById("pos-" + value);
-      position.innerText = state["position"][index]
+      position.innerText = state["position"][index];
     });
 
     // let activeStateChip;
