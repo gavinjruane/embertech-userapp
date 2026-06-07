@@ -96,6 +96,16 @@
     <div class="controls-primary">
       <button
         class="btn btn--start btn--xl"
+        id="btn-enable"
+        onclick="machineAction('enable')"
+        aria-label="Enable machine"
+      >
+        <span class="btn-icon">▶</span>
+        <span class="btn-label">ENABLE<br><small>MACHINE</small></span>
+      </button>
+
+      <button
+        class="btn btn--start btn--xl"
         id="btn-start"
         onclick="machineAction('start')"
         aria-label="Start program"
@@ -150,7 +160,6 @@
   });
 
   function updateUI (state) {
-    // console.log(state);
     window.eStopTriggered = state["is_estop"];
 
     const now = new Date().toLocaleTimeString();
@@ -164,6 +173,9 @@
       const position = document.getElementById("pos-" + value);
       position.innerText = state["position"][index];
     });
+
+    const currentFileLabel = document.getElementById("current-file");
+    currentFileLabel.textContent = state["file"].toString();
 
     // let activeStateChip;
     // switch ( state["task_state"] ) {

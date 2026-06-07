@@ -90,6 +90,8 @@ async function callPushApi(endpoint) {
 
     if ( ! data.success ) {
       console.error("Push API response failed", data);
+    } else {
+      return data;
     }
   } catch ( error ) {
     console.error("Push API request failed", error);

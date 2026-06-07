@@ -1,3 +1,5 @@
+import time
+
 import linuxcnc
 
 """
@@ -30,15 +32,22 @@ class Machine:
         self.stat = None
         self.error_channel = None
 
-    def is_ready(self) -> bool:
+    def is_ready(self) -> tuple[bool, str]:
         # Return whether the machine is ready to receive commands.
         s = self.stat
         s.poll()
 
+        def is_ready_str() -> str:
+            # Return whether the machine is ready to receive commands as a string
+            return (f"estop: not {bool(s.estop)}, enabled: {s.enabled}, all homed: {s.homed.count(1) == s.joints}, "
+                    f"idle: {s.interp_state == linuxcnc.INTERP_IDLE}")
+
         return (not s.estop and s.enabled and (s.homed.count(1) == s.joints) and
-                (s.interp_state == linuxcnc.INTERP_IDLE))
+                (s.interp_state == linuxcnc.INTERP_IDLE)), is_ready_str()
+
 
     def get_error(self) -> dict | None:
+        # Return a formatted error or None if there is no error on the error channel.
         e = self.error_channel.poll()
         if e:
             kind, text = e
@@ -57,7 +66,7 @@ class Machine:
 
     def state(self) -> dict:
         # Poll the machine and return the LinuxCNC state dictionary.
-        keys = ["is_estop", "task_state", "error", "position"]
+        keys = ["is_estop", "task_state", "error", "position", "file"]
         self.stat.poll()
 
         state: dict = dict.fromkeys(keys, "")
@@ -65,8 +74,22 @@ class Machine:
         state["task_state"] = generate_task_state(self.stat)
         state["error"] = self.get_error()
         state["position"] = get_position(self.stat)
+        state["file"] = self.stat.file
 
         return state
+
+    def enable(self) -> bool:
+        # Enable (power on) the machine.
+        self.command_channel.state(linuxcnc.STATE_ON)
+
+        # Sleep waiting for a response
+        time.sleep(0.2)
+        self.stat.poll()
+        return self.stat.task_state == linuxcnc.STATE_ON
+
+    def pause(self) -> None:
+        # Pause the current running program
+        self.command_channel.auto(linuxcnc.AUTO_PAUSE)
 
     def estop(self) -> None:
         # Send an emergency stop signal to the machine.
@@ -75,6 +98,30 @@ class Machine:
     def estop_reset(self) -> None:
         # Send an emergency stop reset signal (emergency stop OFF) to the machine.
         self.command_channel.state(linuxcnc.STATE_ESTOP_RESET)
+
+    def load_file(self, file_path: str) -> None:
+        # Load an NGC (Gcode) file into LinuxCNC.
+        self.command_channel.program_open(file_path)
+
+    def start_program(self) -> None:
+        # Start a program (assuming that a file has been loaded).
+        self.stat.poll()
+        if self.stat.file != "":
+            if self.is_ready()[0]:
+                # self.command_channel.reset_interpreter()
+                self.command_channel.auto(linuxcnc.AUTO_RUN, 0)
+            else:
+                raise MachineNotReadyError
+        else:
+            raise ProgramNotLoadedError
+
+
+class ProgramNotLoadedError(Exception):
+    ...
+
+class MachineNotReadyError(Exception):
+    ...
+
 
 
 def generate_task_state(state) -> str:
@@ -85,11 +132,11 @@ def generate_task_state(state) -> str:
             case linuxcnc.INTERP_IDLE:
                 return "READY"
             case linuxcnc.INTERP_READING:
-                return "RUNNING"
+                return "UNKNOWN"
             case linuxcnc.INTERP_PAUSED:
                 return "PAUSED"
             case linuxcnc.INTERP_WAITING:
-                return "DONE"
+                return "RUNNING"
             case _:
                 return "UNKNOWN"
 

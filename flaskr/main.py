@@ -1,3 +1,5 @@
+from email import message
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 from werkzeug.utils import secure_filename
@@ -9,7 +11,7 @@ from flaskr import db
 from flaskr.auth import check_password, LoginCredential, SignupCredential, hash_password, create_user, require_admin
 from flaskr.db import db_handle, User, Role, Material
 from flaskr.forms import SignupForm
-from flaskr.machine.cnc import Machine
+from flaskr.machine.cnc import Machine, MachineNotReadyError, ProgramNotLoadedError
 from flaskr.util import _ensure_default_materials, _normalize_material_id
 
 # .env File
@@ -20,7 +22,7 @@ app = Flask(__name__)
 app.secret_key = config["SECRET_KEY"]
 
 # File Upload Handling
-ALLOWED_UPLOAD_EXTENSIONS = {'.nc', '.gcode', '.txt'}
+ALLOWED_UPLOAD_EXTENSIONS = {'.gcode', '.txt', '.ngc'}
 
 def allowed_file(filename: str) -> bool:
     _, ext = os.path.splitext(filename.lower())
@@ -148,7 +150,7 @@ def setup():
 @app.route('/machine_state', methods=['GET', 'POST'])
 def machine_state():
     if request.method == 'GET':
-        print(machine.is_ready())
+        print(machine.is_ready()[1])
         return render_template("machine_state.html")
     else:
         return '<h1>Method POST not available for route "machine_state".', 405
@@ -239,6 +241,9 @@ def api_upload_file():
             file.save(save_path)
         except Exception as e:
             return jsonify(success=False, message=str(e)), 500
+
+        machine.load_file(save_path)
+
         return jsonify(success=True, message='Uploaded', path=save_path)
     else:
         return jsonify(success=False, message="Filename cannot be empty"), 400
@@ -257,6 +262,31 @@ def api_estop():
 def api_estop_reset():
     machine.estop_reset()
     return jsonify(success=True, message="Emergency stop reset request received successfully")
+
+
+@app.route('/api/start', methods=["POST"])
+def api_start():
+    try:
+        machine.start_program()
+        return jsonify(success=True, started=True, message="Program started")
+    except MachineNotReadyError as e:
+        return jsonify(success=True, started=False, message=f"Machine not ready for execution: {machine.is_ready()[1]}")
+    except ProgramNotLoadedError as e:
+        return jsonify(success=True, started=False, message="No program loaded")
+
+
+@app.route('/api/enable', methods=["POST"])
+def api_enable():
+    if machine.enable():
+        return jsonify(success=True, message="Machine enabled")
+    else:
+        return jsonify(success=False, message="Machine not enabled")
+
+
+@app.route('/api/pause', methods=["POST"])
+def api_pause():
+    machine.pause()
+    return jsonify(success=True, message="Sent pause command to machine")
 
 
 @app.route('/api/users', methods=['GET'])

@@ -9,8 +9,23 @@ function machineAction(action) {
     toggleEStop();
   } else if (action === 'start') {
     msg.textContent = 'Start command queued.';
+    (async () => {
+      const data = await callPushApi("/api/start");
+      console.log(data);
+      if (!data["started"]) {
+        AlarmManager.add(data["message"], "Program");
+      }
+    })()
   } else if (action === 'pause') {
     msg.textContent = 'Pause command queued.';
+  } else if (action === "enable") {
+    msg.textContent = "Enable command queued.";
+    (async () => {
+      const data = await callPushApi("/api/enable");
+      if (!data["success"]) {
+        AlarmManager.add(data["message"], "Enable");
+      }
+    })();
   } else {
     msg.textContent = `Action: ${action}`;
   }
