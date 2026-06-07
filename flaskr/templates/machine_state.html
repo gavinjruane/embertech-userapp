@@ -45,7 +45,7 @@
         <span class="state-text" id="state-text">UNKNOWN</span>
       </div>
       <div class="state-states">
-        {% for s in ['READY', 'RUNNING', 'PAUSED', 'STOPPED', 'DONE'] %}
+        {% for s in ['READY', 'RUNNING', 'READING', 'PAUSED', 'STOPPED'] %}
           <div class="state-chip" id="chip-{{ s | lower }}">{{ s }}</div>
         {% endfor %}
       </div>
@@ -128,6 +128,16 @@
         class="btn btn--stop btn--xl"
         id="btn-stop"
         onclick="machineAction('stop')"
+        aria-label="Stop"
+      >
+        <span class="btn-icon">■</span>
+        <span class="btn-label">STOP<br><small>PROGRAM STOP</small></span>
+      </button>
+
+      <button
+        class="btn btn--stop btn--xl"
+        id="btn-estop"
+        onclick="machineAction('estop')"
         aria-label="Emergency stop"
       >
         <span class="btn-icon">■</span>
@@ -161,6 +171,7 @@
 
   function updateUI (state) {
     window.eStopTriggered = state["is_estop"];
+    window.taskState = state["task_state"];
 
     const now = new Date().toLocaleTimeString();
     const lastUpdatedTimeText = document.getElementById("last-updated-time");

@@ -289,6 +289,18 @@ def api_pause():
     return jsonify(success=True, message="Sent pause command to machine")
 
 
+@app.route('/api/unpause', methods=["POST"])
+def api_unpause():
+    machine.unpause()
+    return jsonify(success=True, message="Sent unpause command to machine")
+
+
+@app.route('/api/stop', methods=["POST"])
+def api_stop():
+    machine.stop()
+    return jsonify(success=True, message="Sent stop program command to machine")
+
+
 @app.route('/api/users', methods=['GET'])
 def api_get_users():
     if not require_admin(current_user):

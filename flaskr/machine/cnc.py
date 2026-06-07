@@ -87,10 +87,6 @@ class Machine:
         self.stat.poll()
         return self.stat.task_state == linuxcnc.STATE_ON
 
-    def pause(self) -> None:
-        # Pause the current running program
-        self.command_channel.auto(linuxcnc.AUTO_PAUSE)
-
     def estop(self) -> None:
         # Send an emergency stop signal to the machine.
         self.command_channel.state(linuxcnc.STATE_ESTOP)
@@ -109,11 +105,26 @@ class Machine:
         if self.stat.file != "":
             if self.is_ready()[0]:
                 # self.command_channel.reset_interpreter()
+                self.command_channel.mode(linuxcnc.MODE_AUTO)
+                self.command_channel.wait_complete()
+                print("About to start!")
                 self.command_channel.auto(linuxcnc.AUTO_RUN, 0)
             else:
                 raise MachineNotReadyError
         else:
             raise ProgramNotLoadedError
+
+    def pause(self) -> None:
+        # Pause the current running program
+        self.command_channel.auto(linuxcnc.AUTO_PAUSE)
+
+    def unpause(self) -> None:
+        # Unpause the current running program
+        self.command_channel.auto(linuxcnc.AUTO_RESUME)
+
+    def stop(self) -> None:
+        # Stop the current running program
+        self.command_channel.abort()
 
 
 class ProgramNotLoadedError(Exception):
@@ -132,7 +143,7 @@ def generate_task_state(state) -> str:
             case linuxcnc.INTERP_IDLE:
                 return "READY"
             case linuxcnc.INTERP_READING:
-                return "UNKNOWN"
+                return "READING"
             case linuxcnc.INTERP_PAUSED:
                 return "PAUSED"
             case linuxcnc.INTERP_WAITING:

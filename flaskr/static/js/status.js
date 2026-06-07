@@ -80,6 +80,16 @@ function toggleEStop() {
   }
 }
 
+function togglePause() {
+  if ( window.taskState === "PAUSED" ) {
+    callPushApi("/api/unpause");
+  } else {
+    callPushApi("/api/pause");
+  }
+}
+
+const callStop = () => { callPushApi("/api/stop") };
+
 async function callPushApi(endpoint) {
   try {
     const response = await fetch(endpoint, {

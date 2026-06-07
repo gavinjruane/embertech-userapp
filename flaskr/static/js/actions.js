@@ -6,7 +6,7 @@ function machineAction(action) {
 
   if (action === 'stop') {
     msg.textContent = 'Emergency stop triggered.';
-    toggleEStop();
+    callStop();
   } else if (action === 'start') {
     msg.textContent = 'Start command queued.';
     (async () => {
@@ -18,6 +18,7 @@ function machineAction(action) {
     })()
   } else if (action === 'pause') {
     msg.textContent = 'Pause command queued.';
+    togglePause();
   } else if (action === "enable") {
     msg.textContent = "Enable command queued.";
     (async () => {
@@ -26,6 +27,9 @@ function machineAction(action) {
         AlarmManager.add(data["message"], "Enable");
       }
     })();
+  } else if (action === "estop") {
+    msg.textContent = "Emergency stop triggered.";
+    toggleEStop();
   } else {
     msg.textContent = `Action: ${action}`;
   }
