@@ -96,8 +96,13 @@ class Machine:
         self.command_channel.state(linuxcnc.STATE_ESTOP_RESET)
 
     def load_file(self, file_path: str) -> None:
-        # Load an NGC (Gcode) file into LinuxCNC.
-        self.command_channel.program_open(file_path)
+        # Load an NGC (G-code) file into LinuxCNC.
+        if self.is_ready()[0]:
+            self.command_channel.mode(linuxcnc.MODE_AUTO)
+            self.command_channel.wait_complete()
+            self.command_channel.program_open(file_path)
+        else:
+            raise MachineNotReadyError
 
     def start_program(self) -> None:
         # Start a program (assuming that a file has been loaded).

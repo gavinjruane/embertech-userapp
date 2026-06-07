@@ -242,7 +242,10 @@ def api_upload_file():
         except Exception as e:
             return jsonify(success=False, message=str(e)), 500
 
-        machine.load_file(save_path)
+        try:
+            machine.load_file(save_path)
+        except MachineNotReadyError as e:
+            return jsonify(success=False, message="Machine not ready"), 500
 
         return jsonify(success=True, message='Uploaded', path=save_path)
     else:
