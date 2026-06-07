@@ -12,7 +12,7 @@ async function pollForStatus () {
   } catch ( error ) {
     console.warn("Polling failed with error", error);
   } finally {
-    setTimeout(pollForStatus, 3000);
+    setTimeout(pollForStatus, 500);
   }
 }
 

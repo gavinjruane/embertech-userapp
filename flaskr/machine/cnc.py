@@ -157,13 +157,8 @@ def generate_task_state(state) -> str:
                 return "UNKNOWN"
 
 
-def get_position(state) -> list[float]:
-    position = []
-
-    for i in range(state.joints):
-        position.append(round(state.joint[i]["output"], 4))
-
-    return position
+def get_position(stat) -> list[float]:
+    return [round(p, 4) for p in stat.actual_position[:3]]
 
 
 """
