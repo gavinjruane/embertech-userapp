@@ -20,6 +20,18 @@ class Machine:
         self._is_ready: bool = False
         self._state: dict = {}
 
+    def wait(self) -> bool:
+        # Return whether the wait-complete passed or raise an exception otherwise.
+        match self.command_channel.wait_complete():
+            case -1:
+                raise MachineTimedOutError
+            case linuxcnc.RCS_ERROR:
+                raise MachineCommandError
+            case linuxcnc.RCS_DONE:
+                return True
+            case _:
+                raise MachineGeneralError
+
     def connect(self) -> None:
         # Establish a persistent connection to the machine.
         self.command_channel = linuxcnc.command()
@@ -131,11 +143,28 @@ class Machine:
         # Stop the current running program
         self.command_channel.abort()
 
+    def home_all(self) -> None:
+        # Home all axes/joints
+        self.command_channel.teleop_enable(False)
+        self.wait()
+        for joint in range(0, 4):
+            self.command_channel.home(joint)
+            self.wait()
+
 
 class ProgramNotLoadedError(Exception):
     ...
 
 class MachineNotReadyError(Exception):
+    ...
+
+class MachineCommandError(Exception):
+    ...
+
+class MachineTimedOutError(Exception):
+    ...
+
+class MachineGeneralError(Exception):
     ...
 
 

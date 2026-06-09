@@ -90,6 +90,8 @@ function togglePause() {
 
 const callStop = () => { callPushApi("/api/stop") };
 
+const callHome = () => { callPushApi("/api/home") };
+
 async function callPushApi(endpoint) {
   try {
     const response = await fetch(endpoint, {

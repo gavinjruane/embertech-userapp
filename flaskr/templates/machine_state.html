@@ -96,6 +96,16 @@
     <div class="controls-primary">
       <button
         class="btn btn--start btn--xl"
+        id="btn-home"
+        onclick="machineAction('home')"
+        aria-label="Home machine"
+      >
+        <span class="btn-icon">⌂</span>
+        <span class="btn-label">HOME<br><small>JOINTS</small></span>
+      </button>
+
+      <button
+        class="btn btn--start btn--xl"
         id="btn-enable"
         onclick="machineAction('enable')"
         aria-label="Enable machine"
@@ -128,7 +138,7 @@
         class="btn btn--stop btn--xl"
         id="btn-stop"
         onclick="machineAction('stop')"
-        aria-label="Stop"
+        aria-label="Stop program"
       >
         <span class="btn-icon">■</span>
         <span class="btn-label">STOP<br><small>PROGRAM STOP</small></span>

@@ -11,7 +11,8 @@ from flaskr import db
 from flaskr.auth import check_password, LoginCredential, SignupCredential, hash_password, create_user, require_admin
 from flaskr.db import db_handle, User, Role, Material
 from flaskr.forms import SignupForm
-from flaskr.machine.cnc import Machine, MachineNotReadyError, ProgramNotLoadedError
+from flaskr.machine.cnc import Machine, MachineNotReadyError, ProgramNotLoadedError, MachineTimedOutError, \
+    MachineCommandError
 from flaskr.util import _ensure_default_materials, _normalize_material_id
 
 # .env File
@@ -302,6 +303,20 @@ def api_unpause():
 def api_stop():
     machine.stop()
     return jsonify(success=True, message="Sent stop program command to machine")
+
+
+@app.route('/api/home', methods=["POST"])
+def api_home():
+    try:
+        machine.home_all()
+    except MachineTimedOutError as e:
+        return jsonify(success=True, message=f"Machine timed out before command could complete: {e}")
+    except MachineCommandError as e:
+        return jsonify(success=True, message=f"Machine could not process the command: {e}")
+    except Exception as e:
+        return jsonify(success=True, message=f"Machine encountered some unknown error: {e}")
+
+    return jsonify(success=True, message="Sent home command to all joints/axes")
 
 
 @app.route('/api/users', methods=['GET'])
